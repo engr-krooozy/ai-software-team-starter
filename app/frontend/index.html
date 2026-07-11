@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Software Team — Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🤖 AI Software Team <span class="accent">Studio</span></h1>
+    <p class="tagline">One developer. Four AI agents. One deployed product.</p>
+  </header>
+
+  <main>
+    <section class="input-panel">
+      <label for="idea">What should the team build?</label>
+      <textarea id="idea" rows="3"
+        placeholder="e.g. A pomodoro timer with a session log and satisfying sounds"></textarea>
+      <div class="examples">
+        <button class="chip" data-idea="A kanban board with three columns and drag-and-drop cards">Kanban board</button>
+        <button class="chip" data-idea="A typing speed test that shows WPM and accuracy over 60 seconds">Typing test</button>
+        <button class="chip" data-idea="A expense splitter for groups: add people, add expenses, see who owes whom">Expense splitter</button>
+        <button class="chip" data-idea="A memory card matching game with emoji, a move counter and a timer">Memory game</button>
+      </div>
+      <button id="build-btn">🚀 Build it</button>
+    </section>
+
+    <section class="team-panel hidden" id="team-panel">
+      <h2>Team activity</h2>
+      <div class="team">
+        <div class="member" id="member-planner"><span class="avatar">📋</span><span class="name">Planner</span><span class="state">idle</span></div>
+        <div class="member" id="member-builder"><span class="avatar">🔨</span><span class="name">Builder</span><span class="state">idle</span></div>
+        <div class="member" id="member-reviewer"><span class="avatar">🔍</span><span class="name">Reviewer</span><span class="state">idle</span></div>
+        <div class="member" id="member-orchestrator"><span class="avatar">🎯</span><span class="name">Orchestrator</span><span class="state">idle</span></div>
+      </div>
+      <ul id="timeline"></ul>
+    </section>
+
+    <section class="result-panel hidden" id="result-panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="preview">Preview</button>
+        <button class="tab" data-tab="code">Code</button>
+        <button class="tab" data-tab="plan">Plan</button>
+        <button id="download-btn" title="Download the product as an HTML file">⬇️ Download</button>
+      </div>
+      <div class="tab-content" id="tab-preview">
+        <iframe id="preview-frame" sandbox="allow-scripts allow-forms allow-modals" title="Product preview"></iframe>
+      </div>
+      <div class="tab-content hidden" id="tab-code"><pre id="code-view"></pre></div>
+      <div class="tab-content hidden" id="tab-plan"><pre id="plan-view"></pre></div>
+    </section>
+  </main>
+
+  <footer>
+    Built with <a href="https://google.github.io/adk-docs/" target="_blank" rel="noopener">ADK</a> +
+    <a href="https://a2a-protocol.org" target="_blank" rel="noopener">A2A</a>, deployed on Cloud Run.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

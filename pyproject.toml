@@ -1,0 +1,32 @@
+[project]
+name = "ai-software-team"
+version = "0.1.0"
+description = "One Developer. Four AI Agents. One Deployed Product. Workshop starter repo (ADK + A2A + Cloud Run)."
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "google-adk>=1.27.4,<2.0.0",
+    "a2a-sdk==0.3.*",
+    "fastapi==0.124.*",
+    "uvicorn==0.40.0",
+    "httpx==0.28.*",
+    "httpx_sse==0.4.*",
+    "google-genai==1.57.*",
+    "google-cloud-logging==3.13.0",
+    "opentelemetry-exporter-gcp-trace==1.11.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4,<9.0.0",
+    "pytest-asyncio>=0.23.8,<1.0.0",
+    "ruff>=0.4.6,<1.0.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
