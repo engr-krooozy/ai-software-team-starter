@@ -4,13 +4,15 @@ Goal: understand the three layers — worker agents, A2A plumbing, and orchestra
 
 ## Layer 1: Worker agents (the specialists)
 
-Open `agents/planner/agent.py`, `agents/builder/agent.py`,
-`agents/reviewer/agent.py`. Each is just an ADK `Agent`: a model, a role
-description, and an instruction. Two details matter:
+Open `agents/planner/agent.py`, `agents/ux_designer/agent.py`,
+`agents/builder/agent.py`, `agents/reviewer/agent.py`. Each is just an ADK
+`Agent`: a model, a role description, and an instruction. Two details matter:
 
 - **The contract is in the prompts.** The Planner promises acceptance criteria;
-  the Builder promises exactly one ```html fenced block; the Reviewer checks
-  both. Multi-agent systems live or die on these interfaces.
+  the UX Designer promises a spec with concrete hex values and durations; the
+  Builder promises `=== FILE: path ===` blocks with `index.html` required; the
+  Reviewer checks all of it. Multi-agent systems live or die on these
+  interfaces.
 - **The Reviewer has `output_schema=ReviewFeedback`** (a Pydantic model with
   `status: pass|fail`). That's what turns an LLM opinion into something a
   program can branch on.
@@ -36,6 +38,7 @@ Open `agents/orchestrator/agent.py`. Bottom-up:
 ```
 SequentialAgent(software_team_pipeline)
  ├── RemoteA2aAgent(planner)          # plan once
+ ├── RemoteA2aAgent(ux_designer)      # design once
  └── LoopAgent(build_loop, max_iterations=3)
       ├── RemoteA2aAgent(builder)     # build
       ├── RemoteA2aAgent(reviewer)    # review
@@ -45,7 +48,7 @@ SequentialAgent(software_team_pipeline)
 - **`RemoteA2aAgent`** makes a remote service feel like a local sub-agent —
   it's constructed from nothing but the agent-card URL.
 - **`after_agent_callback`** saves each worker's output into session state
-  (`build_plan`, `app_code`, `review_feedback`).
+  (`build_plan`, `design_spec`, `app_code`, `review_feedback`).
 - **`EscalationChecker`** is a tiny custom `BaseAgent`: it reads
   `review_feedback` from state and yields an `escalate` event when the review
   passed. Escalation is how ADK breaks a `LoopAgent`.
@@ -57,8 +60,11 @@ control flow is deterministic code; only the workers think.
 
 `app/main.py` calls the Orchestrator's ADK API server (`/run_sse`) and relays
 each event as NDJSON to the browser — that's the team activity timeline. At the
-end it extracts the HTML from the Builder's final message and the frontend
-renders it in a sandboxed iframe.
+end, `parse_files()` extracts the `=== FILE: path ===` blocks from the
+Builder's final message, keeps the product in memory, and serves it to the
+preview iframe at `/preview/{session}/...` (with `/download/{session}.zip` for
+multi-file products). `cli.py` consumes the same NDJSON stream and writes the
+files to disk instead.
 
 ## Try this (5 min)
 

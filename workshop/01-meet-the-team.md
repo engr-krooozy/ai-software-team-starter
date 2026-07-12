@@ -1,6 +1,6 @@
 # Module 1 — Meet the team (15 min)
 
-Goal: run all five services locally and ship your first product.
+Goal: run all six services locally and ship your first product.
 
 ## 1. Start the team
 
@@ -8,14 +8,15 @@ Goal: run all five services locally and ship your first product.
 ./run_local.sh
 ```
 
-This starts five processes:
+This starts six processes:
 
 | Port | Service | What it is |
 |---|---|---|
 | 8001 | Planner | A2A microservice |
+| 8005 | UX Designer | A2A microservice |
 | 8002 | Builder | A2A microservice |
 | 8003 | Reviewer | A2A microservice |
-| 8004 | Orchestrator | ADK API server, connects to the three above |
+| 8004 | Orchestrator | ADK API server, connects to the four above |
 | 8000 | Studio | The web app you interact with |
 
 First run takes a minute while `uv` resolves each service's environment.
@@ -26,11 +27,21 @@ Open **http://localhost:8000**, click one of the example chips (or type your own
 idea), and hit **🚀 Build it**. Watch the team activity panel:
 
 1. 📋 Planner drafts the build plan (appears in the **Plan** tab).
-2. 🔨 Builder writes the app.
-3. 🔍 Reviewer verdicts it — on **fail**, the Builder gets the feedback and
-   tries again (up to 3 iterations).
-4. 🚢 The finished product renders live in the **Preview** tab. Download it
-   with the ⬇️ button — it's one self-contained HTML file.
+2. 🎨 UX Designer writes a design spec — palette, layout, interaction details
+   (appended below the plan in the **Plan** tab).
+3. 🔨 Builder writes the app as one or more static files.
+4. 🔍 Reviewer verdicts it against plan *and* spec — on **fail**, the Builder
+   gets the feedback and tries again (up to 3 iterations).
+5. 🚢 The finished product renders live in the **Preview** tab. Download it
+   with the ⬇️ button — a single HTML file, or a zip when the Builder split
+   the app into several files.
+
+**The IDE workflow:** you can also ship from the terminal — the product's
+files land in a directory you can iterate on with your IDE agent:
+
+```bash
+uv run python cli.py "a pomodoro timer with a session log" -o ./pomodoro
+```
 
 ## 3. Poke at the seams
 
