@@ -1,9 +1,14 @@
 #!/bin/bash
 
 # Deploys the full team to Cloud Run:
-#   planner, builder, reviewer  (private A2A microservices)
-#   orchestrator                (private, wired to the three above)
+#   planner, builder, reviewer, ux-designer  (private A2A microservices)
+#   orchestrator                (private, wired to the four above)
 #   studio                      (public web app, wired to the orchestrator)
+#
+# Optional: BUILDER_GEMINI_MODEL=gemini-2.5-pro ./deploy.sh
+#           gives the builder a stronger model than the flash default.
+#           (Check which pro models your project can access; e.g. Qwiklabs
+#           lab projects had gemini-2.5-pro but not gemini-3-pro-preview.)
 
 set -e
 
@@ -48,7 +53,8 @@ gcloud run deploy builder \
   --region $REGION \
   --no-allow-unauthenticated \
   --set-env-vars GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT}" \
-  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true"
+  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true" \
+  --set-env-vars GEMINI_MODEL="${BUILDER_GEMINI_MODEL:-gemini-3-flash-preview}"
 BUILDER_URL=$(gcloud run services describe builder --region $REGION --format='value(status.url)')
 
 gcloud run deploy reviewer \
@@ -60,6 +66,15 @@ gcloud run deploy reviewer \
   --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true"
 REVIEWER_URL=$(gcloud run services describe reviewer --region $REGION --format='value(status.url)')
 
+gcloud run deploy ux-designer \
+  --source agents/ux_designer \
+  --project $GOOGLE_CLOUD_PROJECT \
+  --region $REGION \
+  --no-allow-unauthenticated \
+  --set-env-vars GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT}" \
+  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true"
+UX_DESIGNER_URL=$(gcloud run services describe ux-designer --region $REGION --format='value(status.url)')
+
 gcloud run deploy orchestrator \
   --source agents/orchestrator \
   --project $GOOGLE_CLOUD_PROJECT \
@@ -68,6 +83,7 @@ gcloud run deploy orchestrator \
   --set-env-vars PLANNER_AGENT_CARD_URL=$PLANNER_URL/a2a/agent/.well-known/agent-card.json \
   --set-env-vars BUILDER_AGENT_CARD_URL=$BUILDER_URL/a2a/agent/.well-known/agent-card.json \
   --set-env-vars REVIEWER_AGENT_CARD_URL=$REVIEWER_URL/a2a/agent/.well-known/agent-card.json \
+  --set-env-vars UX_DESIGNER_AGENT_CARD_URL=$UX_DESIGNER_URL/a2a/agent/.well-known/agent-card.json \
   --set-env-vars GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT}" \
   --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true"
 ORCHESTRATOR_URL=$(gcloud run services describe orchestrator --region $REGION --format='value(status.url)')

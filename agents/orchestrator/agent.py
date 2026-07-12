@@ -55,6 +55,20 @@ planner = RemoteA2aAgent(
     httpx_client=create_authenticated_client(planner_url),
 )
 
+# Connect to the UX Designer (localhost port 8005)
+ux_designer_url = os.environ.get(
+    "UX_DESIGNER_AGENT_CARD_URL",
+    "http://localhost:8005/a2a/agent/.well-known/agent-card.json",
+)
+ux_designer = RemoteA2aAgent(
+    name="ux_designer",
+    agent_card=ux_designer_url,
+    description="Turns the build plan into a concrete design spec.",
+    after_agent_callback=create_save_output_callback("design_spec"),
+    # IMPORTANT: httpx client with Id Token Authentication
+    httpx_client=create_authenticated_client(ux_designer_url),
+)
+
 # Connect to the Builder (localhost port 8002)
 builder_url = os.environ.get(
     "BUILDER_AGENT_CARD_URL",
@@ -117,9 +131,9 @@ build_loop = LoopAgent(
     max_iterations=3,
 )
 
-# The full team pipeline: plan first, then build/review until it ships.
+# The full team pipeline: plan, design, then build/review until it ships.
 root_agent = SequentialAgent(
     name="software_team_pipeline",
-    description="A software team that plans, builds, and reviews a product from a single idea.",
-    sub_agents=[planner, build_loop],
+    description="A software team that plans, designs, builds, and reviews a product from a single idea.",
+    sub_agents=[planner, ux_designer, build_loop],
 )
