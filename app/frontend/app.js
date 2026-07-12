@@ -9,7 +9,8 @@ const planView = document.getElementById("plan-view");
 const downloadBtn = document.getElementById("download-btn");
 
 let sessionId = null;
-let productHtml = null;
+let productFiles = null; // {path: content} of the last shipped product
+let productSession = null; // session the last product was stored under
 
 // Example chips fill the textarea
 document.querySelectorAll(".chip").forEach((chip) => {
@@ -30,13 +31,20 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 downloadBtn.addEventListener("click", () => {
-  if (!productHtml) return;
-  const blob = new Blob([productHtml], { type: "text/html" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "product.html";
-  a.click();
-  URL.revokeObjectURL(a.href);
+  if (!productFiles) return;
+  const paths = Object.keys(productFiles);
+  if (paths.length === 1) {
+    // Single file: download it directly
+    const blob = new Blob([productFiles[paths[0]]], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = paths[0];
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } else {
+    // Multi-file product: the server bundles it as a zip
+    window.location.href = `/download/${productSession}.zip`;
+  }
 });
 
 function logLine(text, cls) {
@@ -58,10 +66,11 @@ function setMemberState(agent, state) {
 
 function resetUI() {
   timeline.innerHTML = "";
-  ["planner", "builder", "reviewer", "orchestrator"].forEach((a) => setMemberState(a, "idle"));
+  ["planner", "ux_designer", "builder", "reviewer", "orchestrator"].forEach((a) => setMemberState(a, "idle"));
   teamPanel.classList.remove("hidden");
   resultPanel.classList.add("hidden");
-  productHtml = null;
+  productFiles = null;
+  productSession = null;
 }
 
 buildBtn.addEventListener("click", async () => {
@@ -121,14 +130,21 @@ buildBtn.addEventListener("click", async () => {
         } else if (event.type === "result") {
           if (currentAgent) setMemberState(currentAgent, "done");
           setMemberState("orchestrator", "done");
-          if (event.html) {
-            productHtml = event.html;
-            previewFrame.srcdoc = event.html;
-            codeView.textContent = event.html;
+          if (event.files) {
+            productFiles = event.files;
+            productSession = sessionId;
+            previewFrame.src = event.preview_url;
+            const paths = Object.keys(event.files);
+            codeView.textContent = paths
+              .map((p) => `/* ═══════ ${p} ═══════ */\n\n${event.files[p]}`)
+              .join("\n\n");
             resultPanel.classList.remove("hidden");
-            logLine(`🚢 Shipped after ${event.iterations} build iteration(s).`, "pass");
+            logLine(
+              `🚢 Shipped ${paths.length} file(s) after ${event.iterations} build iteration(s): ${paths.join(", ")}`,
+              "pass"
+            );
           } else {
-            logLine("⚠️ The builder did not return a usable HTML file. Raw output shown in the Code tab.", "fail");
+            logLine("⚠️ The builder did not return usable files. Raw output shown in the Code tab.", "fail");
             codeView.textContent = event.raw || "(empty response)";
             resultPanel.classList.remove("hidden");
           }

@@ -1,10 +1,11 @@
+import os
 from typing import Literal
 
 from google.adk.agents import Agent
 from pydantic import BaseModel, Field
 
 
-MODEL = "gemini-3-flash-preview"
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
 
 
 # --- Data Models ---
@@ -30,16 +31,25 @@ reviewer = Agent(
     Evaluate the app code produced by the builder ('app_code') against the
     team's 'build_plan' and the user's original request.
 
+    The builder emits files as blocks marked `=== FILE: path ===` followed
+    by a fenced code block.
+
     Check, in order:
-    1. **Completeness** — is it a full HTML document (<!DOCTYPE html> ...
-       </html>) in a single ```html code block, with all CSS/JS inline?
-    2. **Self-contained** — no CDNs, external fonts/images, or network calls.
-    3. **Correctness** — read the JavaScript carefully. Flag bugs that would
-       break it at runtime: undefined variables, wrong element IDs, event
-       handlers never attached, state that is never rendered.
+    1. **Completeness** — is there an `index.html` file containing a full
+       HTML document (<!DOCTYPE html> ... </html>)? Does every FILE block
+       contain real content (no placeholders, no empty files)?
+    2. **Self-contained** — no CDNs, external fonts/images, or network
+       calls. Every relative reference (<link href>, <script src>, images)
+       must point to a file that was actually emitted.
+    3. **Correctness** — read the JavaScript carefully, across all files.
+       Flag bugs that would break it at runtime: undefined variables, wrong
+       element IDs, event handlers never attached, state that is never
+       rendered.
     4. **Acceptance criteria** — does the code plausibly satisfy each
        criterion in the plan?
-    5. **Polish** — usable layout, labeled controls, visible feedback on
+    5. **Design spec** — if a 'design_spec' exists, does the code follow its
+       palette, layout, and interaction details? Flag clear deviations.
+    6. **Polish** — usable layout, labeled controls, visible feedback on
        user actions.
 
     If everything holds, output status='pass'.

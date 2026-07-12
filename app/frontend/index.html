@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>🤖 AI Software Team <span class="accent">Studio</span></h1>
-    <p class="tagline">One developer. Four AI agents. One deployed product.</p>
+    <p class="tagline">One developer. Five AI agents. One deployed product.</p>
   </header>
 
   <main>
@@ -30,6 +30,7 @@
       <h2>Team activity</h2>
       <div class="team">
         <div class="member" id="member-planner"><span class="avatar">📋</span><span class="name">Planner</span><span class="state">idle</span></div>
+        <div class="member" id="member-ux_designer"><span class="avatar">🎨</span><span class="name">UX Designer</span><span class="state">idle</span></div>
         <div class="member" id="member-builder"><span class="avatar">🔨</span><span class="name">Builder</span><span class="state">idle</span></div>
         <div class="member" id="member-reviewer"><span class="avatar">🔍</span><span class="name">Reviewer</span><span class="state">idle</span></div>
         <div class="member" id="member-orchestrator"><span class="avatar">🎯</span><span class="name">Orchestrator</span><span class="state">idle</span></div>
@@ -42,10 +43,10 @@
         <button class="tab active" data-tab="preview">Preview</button>
         <button class="tab" data-tab="code">Code</button>
         <button class="tab" data-tab="plan">Plan</button>
-        <button id="download-btn" title="Download the product as an HTML file">⬇️ Download</button>
+        <button id="download-btn" title="Download the product (single HTML file or zip)">⬇️ Download</button>
       </div>
       <div class="tab-content" id="tab-preview">
-        <iframe id="preview-frame" sandbox="allow-scripts allow-forms allow-modals" title="Product preview"></iframe>
+        <iframe id="preview-frame" sandbox="allow-scripts allow-forms allow-modals allow-same-origin" title="Product preview"></iframe>
       </div>
       <div class="tab-content hidden" id="tab-code"><pre id="code-view"></pre></div>
       <div class="tab-content hidden" id="tab-plan"><pre id="plan-view"></pre></div>

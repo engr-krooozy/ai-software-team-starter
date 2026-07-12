@@ -1,13 +1,17 @@
+import io
 import json
 import logging
+import mimetypes
 import os
 import re
+import zipfile
+from collections import OrderedDict
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from google.genai import types as genai_types
 from httpx_sse import aconnect_sse
@@ -125,9 +129,61 @@ def extract_html(text: str) -> Optional[str]:
     return None
 
 
+FILE_BLOCK = re.compile(
+    r"===\s*FILE:\s*(?P<path>[^=\n]+?)\s*===\s*\n```[a-zA-Z0-9]*\s*\n(?P<body>.*?)```",
+    re.DOTALL,
+)
+
+
+def safe_relative_path(path: str) -> Optional[str]:
+    """Normalizes a builder-emitted path; rejects absolute paths and traversal."""
+    path = path.strip()
+    while path.startswith("./"):
+        path = path[2:]
+    if not path or path.startswith(("/", "\\")) or ".." in path.split("/"):
+        return None
+    return path
+
+
+def parse_files(text: str) -> Optional[Dict[str, str]]:
+    """Parses the builder's `=== FILE: path ===` blocks into {path: content}.
+
+    Falls back to treating a bare single-file response as index.html so
+    older builder outputs keep working.
+    """
+    if not text:
+        return None
+    files: Dict[str, str] = {}
+    for match in FILE_BLOCK.finditer(text):
+        path = safe_relative_path(match.group("path"))
+        body = match.group("body").strip()
+        if path and body:
+            files[path] = body
+    if "index.html" in files:
+        return files
+    html = extract_html(text)
+    if html:
+        return {"index.html": html}
+    return None
+
+
+# The last few shipped products, kept in memory so the iframe can preview
+# multi-file apps at /preview/{session_id}/... (single instance, demo scale).
+PREVIEWS: "OrderedDict[str, Dict[str, str]]" = OrderedDict()
+MAX_PREVIEWS = 20
+
+
+def store_preview(session_id: str, files: Dict[str, str]) -> None:
+    PREVIEWS[session_id] = files
+    PREVIEWS.move_to_end(session_id)
+    while len(PREVIEWS) > MAX_PREVIEWS:
+        PREVIEWS.popitem(last=False)
+
+
 # Progress messages shown in the Studio timeline as each teammate takes over.
 AGENT_STATUS = {
     "planner": "📋 Planner is decomposing your idea into a build plan...",
+    "ux_designer": "🎨 UX Designer is drafting the design spec...",
     "builder": "🔨 Builder is implementing the app...",
     "reviewer": "🔍 Reviewer is testing the build against the plan...",
 }
@@ -203,6 +259,10 @@ async def build_stream(request: SimpleChatRequest):
             if author == "planner":
                 plan_text += text
                 yield json.dumps({"type": "plan", "text": plan_text}) + "\n"
+            elif author == "ux_designer":
+                # The design spec joins the plan in the Plan tab
+                plan_text += "\n\n---\n\n# Design Spec\n\n" + text
+                yield json.dumps({"type": "plan", "text": plan_text}) + "\n"
             elif author == "builder":
                 builder_text = text  # keep only the latest build
             elif author == "reviewer":
@@ -220,17 +280,52 @@ async def build_stream(request: SimpleChatRequest):
                     }
                 ) + "\n"
 
-        html = extract_html(builder_text)
+        files = parse_files(builder_text)
+        if files:
+            store_preview(session["id"], files)
         yield json.dumps(
             {
                 "type": "result",
-                "html": html,
-                "raw": builder_text if html is None else None,
+                "files": files,
+                "preview_url": f"/preview/{session['id']}/index.html" if files else None,
+                # kept for older clients / single-file downloads
+                "html": (files or {}).get("index.html"),
+                "raw": builder_text if files is None else None,
                 "iterations": iterations,
             }
         ) + "\n"
 
     return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+
+
+@app.get("/preview/{session_id}/{path:path}")
+async def serve_preview(session_id: str, path: str):
+    """Serves a shipped product's files from memory so the iframe can run them."""
+    files = PREVIEWS.get(session_id)
+    if files is None:
+        raise HTTPException(404, "No product stored for this session (it may have expired).")
+    content = files.get(path or "index.html")
+    if content is None:
+        raise HTTPException(404, f"{path} is not part of this product.")
+    media_type = mimetypes.guess_type(path or "index.html")[0] or "text/plain"
+    return Response(content, media_type=media_type)
+
+
+@app.get("/download/{session_id}.zip")
+async def download_zip(session_id: str):
+    """Bundles a shipped product's files into a zip."""
+    files = PREVIEWS.get(session_id)
+    if files is None:
+        raise HTTPException(404, "No product stored for this session (it may have expired).")
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path, content in files.items():
+            zf.writestr(path, content)
+    return Response(
+        buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=product.zip"},
+    )
 
 
 # Mount frontend from the copied location
