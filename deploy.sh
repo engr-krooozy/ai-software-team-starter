@@ -75,10 +75,13 @@ gcloud run deploy ux-designer \
   --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true"
 UX_DESIGNER_URL=$(gcloud run services describe ux-designer --region $REGION --format='value(status.url)')
 
+# The orchestrator and studio hold one request open for a whole pipeline run;
+# a multi-iteration build easily exceeds Cloud Run's 300s default timeout.
 gcloud run deploy orchestrator \
   --source agents/orchestrator \
   --project $GOOGLE_CLOUD_PROJECT \
   --region $REGION \
+  --timeout 900 \
   --no-allow-unauthenticated \
   --set-env-vars PLANNER_AGENT_CARD_URL=$PLANNER_URL/a2a/agent/.well-known/agent-card.json \
   --set-env-vars BUILDER_AGENT_CARD_URL=$BUILDER_URL/a2a/agent/.well-known/agent-card.json \
@@ -92,6 +95,7 @@ gcloud run deploy studio \
   --source app \
   --project $GOOGLE_CLOUD_PROJECT \
   --region $REGION \
+  --timeout 900 \
   --allow-unauthenticated \
   --set-env-vars AGENT_SERVER_URL=$ORCHESTRATOR_URL \
   --set-env-vars GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT}"
