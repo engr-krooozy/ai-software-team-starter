@@ -3,7 +3,7 @@ import os
 from google.adk.agents import Agent
 
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro")
 
 # --- UX Designer Agent ---
 # Role: the "product designer" of the team. Sits between the Planner and the

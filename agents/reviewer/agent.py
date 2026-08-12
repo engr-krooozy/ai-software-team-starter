@@ -5,7 +5,7 @@ from google.adk.agents import Agent
 from pydantic import BaseModel, Field
 
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro")
 
 
 # --- Data Models ---

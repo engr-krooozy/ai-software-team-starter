@@ -47,8 +47,8 @@ on Cloud Run with service-to-service authentication.
 | `app` (Studio) | Web UI: idea in, live team activity, product preview + zip out | FastAPI + ADK API server client | 8000 |
 
 Models are env-driven: every agent reads `GEMINI_MODEL` (default
-`gemini-3-flash-preview`), and `deploy.sh` accepts `BUILDER_GEMINI_MODEL` to
-give the Builder a stronger model (e.g. `gemini-2.5-pro`).
+`gemini-3.1-pro`), and `deploy.sh` accepts `BUILDER_GEMINI_MODEL` to
+give the Builder a custom model.
 
 ## Quick start
 

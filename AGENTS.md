@@ -34,8 +34,8 @@ iframe (`/preview/{session}/...`) and offers a single-file or zip download;
   (`app/frontend/app.js`) renders those; keep both sides in sync when adding
   event types.
 - Model id lives in each `agent.py` as `MODEL`, read from the `GEMINI_MODEL`
-  env var (default `gemini-3-flash-preview`). `deploy.sh` accepts
-  `BUILDER_GEMINI_MODEL` to give the builder a stronger model; swap a deployed
+  env var (default `gemini-3.1-pro`). `deploy.sh` accepts
+  `BUILDER_GEMINI_MODEL` to give the builder a custom model; swap a deployed
   service's model with `gcloud run services update <svc> --update-env-vars
   GEMINI_MODEL=...` (never `--set-env-vars`, which wipes the other vars).
 

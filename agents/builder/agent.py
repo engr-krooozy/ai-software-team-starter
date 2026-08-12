@@ -3,7 +3,7 @@ import os
 from google.adk.agents import Agent
 
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro")
 
 # --- Builder Agent ---
 # Role: the "frontend engineer" of the team. Implements the Planner's plan
