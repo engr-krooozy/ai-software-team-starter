@@ -3,7 +3,7 @@ import os
 from google.adk.agents import Agent
 
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.7-flash")
 
 # --- Planner Agent ---
 # Role: the "product engineer" of the team. Turns a raw product idea into a

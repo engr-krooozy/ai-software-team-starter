@@ -54,7 +54,7 @@ gcloud run deploy builder \
   --no-allow-unauthenticated \
   --set-env-vars GOOGLE_CLOUD_PROJECT="${GOOGLE_CLOUD_PROJECT}" \
   --set-env-vars GOOGLE_GENAI_USE_VERTEXAI="true" \
-  --set-env-vars GEMINI_MODEL="${BUILDER_GEMINI_MODEL:-gemini-3.1-pro}"
+  --set-env-vars GEMINI_MODEL="${BUILDER_GEMINI_MODEL:-gemini-3.7-flash}"
 BUILDER_URL=$(gcloud run services describe builder --region $REGION --format='value(status.url)')
 
 gcloud run deploy reviewer \
