@@ -108,7 +108,7 @@ The script prints your live product URL at the end.
 ## Project structure
 
 ```
-ai-software-team/
+ai-software-team-starter/
 ├── agents/
 │   ├── planner/        # A2A microservice: idea → build plan
 │   ├── ux_designer/    # A2A microservice: plan → design spec

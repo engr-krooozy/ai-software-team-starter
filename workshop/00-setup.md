@@ -37,7 +37,7 @@ instead, copy `.env.example` to `.env`, and set `GEMINI_API_KEY`.
 ## 4. Install dependencies
 
 ```bash
-git clone <this-repo> && cd ai-software-team
+git clone <this-repo> && cd ai-software-team-starter
 uv sync
 ```
 
